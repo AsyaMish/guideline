@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)" />
 <title>Гайдлайны проектов</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%234f6ef2'/%3E%3Ccircle cx='12' cy='12' r='5' fill='white'/%3E%3C/svg%3E" />
+<link rel="manifest" href="manifest.json" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -32,5 +35,12 @@
 <script src="js/views-export.js"></script>
 <script src="js/views-settings.js"></script>
 <script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW error', err));
+    });
+  }
+</script>
 </body>
 </html>
