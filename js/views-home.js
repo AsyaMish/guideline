@@ -152,12 +152,16 @@ function openCreateProject(onCreated){
   const nameInp = m.querySelector('#np-name');
   const descInp = m.querySelector('#np-desc');
   m.querySelector('[data-x=cancel]').onclick=closeModal;
-  const create=()=>{
+    const create=()=>{
     const nm = nameInp.value.trim();
     if(!nm){ toast('Введите название проекта'); nameInp.focus(); return; }
     const p = Store.addProject(nm, descInp.value.trim());
     closeModal();
-    onCreated && onCreated(p);
+    if (typeof onCreated === 'function') {
+      onCreated(p);
+    } else {
+      App.render(); // <--- Вот эта строка заставит экран обновиться сразу
+    }
   };
   m.querySelector('[data-x=create]').onclick=create;
   nameInp.addEventListener('keydown',e=>{if(e.key==='Enter')create();});

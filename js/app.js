@@ -2,11 +2,13 @@
 
 const App = {
   state: { route:'home', params:{}, filtersOpen:false, spacingTab:'items', stack:[] },
-  project: null, // convenience for views that reference App.project
+  project: null,
 
   navigate(route, params={}){
     this.state.stack.push({route:this.state.route, params:this.state.params});
     this.state.route=route; this.state.params=params;
+    // Сохраняем текущее местоположение в память
+    localStorage.setItem('app_last_route', JSON.stringify({route: this.state.route, params: this.state.params}));
     this.filtersOpenCleanup(route);
     this.render();
     window.scrollTo(0,0);

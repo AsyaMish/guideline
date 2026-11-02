@@ -164,6 +164,8 @@ function fillFromParentVersion(obj, version){
   clone.inherit = true;
   obj.perVersion[version] = clone;
   obj.updatedAt = nowISO();
+  Store.save();
+  App.render(); // <--- Принудительно обновляем экран после автозаполнения
 }
 
 /* Проверка: заполнен ли пункт версии (для зелёной галочки) */
