@@ -1,6 +1,31 @@
 /* Хранилище: localStorage + мутації з автосохранением */
 
 const STORAGE_KEY = 'guidelines-app-v1';
+const TOC_UI_KEY = 'guidelines-toc-ui-v1';
+
+/* Состояние свёрнутых/развёрнутых разделов в оглавлении (персистентно) */
+const TocUI = {
+  data: { collapsed:{} }, // collapsed[sectionId] === true → раздел свёрнут; по умолчанию все свёрнуты
+  load(){
+    try{
+      const raw=localStorage.getItem(TOC_UI_KEY);
+      if(raw){ const d=JSON.parse(raw); if(d && typeof d.collapsed==='object') this.data=d; }
+    }catch(e){ console.warn('Не удалось загрузить состояние оглавления', e); }
+  },
+  save(){
+    try{ localStorage.setItem(TOC_UI_KEY, JSON.stringify(this.data)); }
+    catch(e){ console.warn('Не удалось сохранить состояние оглавления', e); }
+  },
+  isCollapsed(sectionId){ return this.data.collapsed[sectionId]!==false; }, // по умолчанию свёрнуто
+  toggle(sectionId){
+    this.data.collapsed[sectionId]=!this.isCollapsed(sectionId);
+    this.save();
+  },
+  setAll(collapsed){
+    SECTIONS.forEach(sec=>{ this.data.collapsed[sec.id]=collapsed; });
+    this.save();
+  },
+};
 
 const Store = {
   state: null,          // { projects:[], settings:{theme} }
@@ -23,10 +48,15 @@ const Store = {
 
   save(){
     clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(()=>{
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state)); }
-      catch(e){ console.warn('Не удалось сохранить', e); toast('Не удалось сохранить локально'); }
-    }, 120);
+    this._saveTimer = setTimeout(()=>{ this.flush(); }, 120);
+  },
+
+  flush(){
+    // немедленная запись (используется при перезагрузке страницы и для синхронизации между вкладками)
+    clearTimeout(this._saveTimer);
+    this._saveTimer = null;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state)); }
+    catch(e){ console.warn('Не удалось сохранить', e); toast('Не удалось сохранить локально'); }
   },
 
   touchProject(p){ p.updatedAt = nowISO(); this.save(); },
