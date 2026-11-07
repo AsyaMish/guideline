@@ -1,5 +1,17 @@
 /* Роутер и каркас приложения */
 
+/* ===== Персистентность состояния (переживание перезагрузки страницы) ===== */
+const UI_STATE_KEY='guidelines-app-ui-v1';
+
+function loadUIState(){
+  try{ return JSON.parse(localStorage.getItem(UI_STATE_KEY)||'null'); }catch(e){ return null; }
+}
+function persistRoute(){
+  try{ localStorage.setItem(UI_STATE_KEY, JSON.stringify({route:App.state.route, params:App.state.params})); }
+  catch(e){ /* игнорируем */ }
+}
+window.addEventListener('beforeunload', ()=>{ Store.flush(); });
+
 const App = {
   state: { route:'home', params:{}, filtersOpen:false, spacingTab:'items', stack:[] },
   project: null, // convenience for views that reference App.project
@@ -8,6 +20,15 @@ const App = {
     this.state.stack.push({route:this.state.route, params:this.state.params});
     this.state.route=route; this.state.params=params;
     this.filtersOpenCleanup(route);
+    persistRoute();
+    this.render();
+    window.scrollTo(0,0);
+  },
+  replace(route, params={}){
+    // переход без добавления в историю «назад» (используется после создания проекта)
+    this.state.route=route; this.state.params=params;
+    this.filtersOpenCleanup(route);
+    persistRoute();
     this.render();
     window.scrollTo(0,0);
   },
@@ -15,6 +36,7 @@ const App = {
     const prev=this.state.stack.pop();
     if(prev){ this.state.route=prev.route; this.state.params=prev.params; }
     else this.state.route='home';
+    persistRoute();
     this.render();
   },
   goBackOr(fallbackRoute){
@@ -299,11 +321,31 @@ function sectionQuickAdd(project,sectionId){
 /* Старт */
 window.addEventListener('DOMContentLoaded', ()=>{
   Store.load();
+  TocUI.load();
   App.applyTheme();
   if(window.matchMedia){
     const mq=window.matchMedia('(prefers-color-scheme: dark)');
     const listener=()=>{ if((Store.state.settings.theme||'system')==='system') App.applyTheme(); };
     if(mq.addEventListener) mq.addEventListener('change',listener); else if(mq.addListener) mq.addListener(listener);
   }
+  // Восстановление экрана после перезагрузки (данные уже в localStorage — ничего не теряется)
+  const saved=loadUIState();
+  if(saved && saved.route){
+    const validProject = saved.params && saved.params.projectId ? !!Store.getProject(saved.params.projectId) : !saved.params?.projectId;
+    if(validProject && ['home','toc','section','export','settings'].includes(saved.route)){
+      // одноразовые флаги не восстанавливаем, чтобы после перезагрузки не всплывали модалки
+      const params=Object.assign({}, saved.params); delete params.quickAdd;
+      App.state.route=saved.route; App.state.params=params;
+    }
+  }
   App.render();
+
+  // Синхронизация между вкладками: если данные изменились в другой вкладке — подтягиваем и перерисовываем
+  window.addEventListener('storage', e=>{
+    if(e.key===STORAGE_KEY && Store._saveTimer==null){
+      Store.load();
+      App.applyTheme();
+      App.render();
+    }
+  });
 });

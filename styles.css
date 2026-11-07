@@ -136,6 +136,13 @@ textarea.input{min-height:64px;resize:vertical;}
 .item.locked .item-head{cursor:pointer;}
 .dot-sep{flex:1;}
 
+/* ---------- Оглавление: сворачиваемые разделы ---------- */
+.toc-head{cursor:pointer;user-select:none;}
+.toc-head .chev{display:inline-flex;color:var(--muted);transition:transform .15s;flex:none;}
+.toc-head .chev svg{width:20px;height:20px;}
+.toc-head .chev.open{transform:rotate(90deg);}
+.toc-toolbar{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--surface);}
+
 /* ---------- Кружок цвета ---------- */
 .swatch{width:26px;height:26px;border-radius:50%;flex:none;border:1px solid var(--line);position:relative;overflow:hidden;background:var(--surface3);}
 .swatch.empty::before,.swatch.empty::after{content:"";position:absolute;left:50%;top:50%;width:70%;height:2px;background:var(--muted);border-radius:2px;}

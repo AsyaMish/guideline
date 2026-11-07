@@ -30,6 +30,17 @@ function renderTOC(params){
   }
 
   const card = h('<div class="card toc-card" id="toc-list"></div>');
+
+  // Управление сворачиванием разделов (по умолчанию все свёрнуты)
+  if(SECTIONS.length){
+    const anyExpanded = SECTIONS.some(sec=>!TocUI.isCollapsed(sec.id));
+    const toolbar = h('<div class="toc-toolbar"></div>');
+    const toggleAll = h(`<button class="btn btn-sm">${anyExpanded ? ICONS.chevron+' Свернуть все' : ICONS.chevron+' Развернуть все'}</button>`);
+    toggleAll.onclick=()=>{ TocUI.setAll(anyExpanded); App.render(); };
+    toolbar.appendChild(toggleAll);
+    card.appendChild(toolbar);
+  }
+
   buildTOCRows(project).forEach(r=>card.appendChild(r));
   scr.appendChild(card);
   return scr;
@@ -66,32 +77,41 @@ function buildTOCRows(project){
     const brokenInSection = sectionBrokenLinks(project).filter(b=>b.sectionId===sec.id);
     if(TOCFilters.brokenOnly && !brokenInSection.length && !filteredItems.some(i=>i.broken&&i.broken.length)) return;
 
-    // Заголовок раздела
-    const head = h('<div class="row-item"></div>');
-    head.style.cursor='default'; head.style.background='var(--surface2)';
+    // при активном поиске или фильтрах разделы принудительно разворачиваем, чтобы результаты были видны
+    const filtersActive = q || TOCFilters.filledOnly || TOCFilters.brokenOnly || selVers.length;
+    const collapsed = TocUI.isCollapsed(sec.id) && !filtersActive;
+
+    // Заголовок раздела (кликабельный — сворачивает/разворачивает список пунктов)
+    const head = h('<div class="row-item toc-head"></div>');
+    head.style.background='var(--surface2)';
     const icon = h(`<span style="color:var(--accent);display:inline-flex;width:22px;height:22px">${ICONS[sec.icon]}</span>`);
     head.appendChild(icon);
-    const titleWrap = h(`<div class="row-main"><div class="row-title">${esc(sec.title)}</div></div>`);
+    const titleWrap = h(`<div class="row-main"><div class="row-title">${esc(sec.title)}${collapsed&&filteredItems.length?` <span class="muted small" style="font-weight:500">· ${filteredItems.length}</span>`:''}</div></div>`);
     if(sectionHasData(project, sec.id, null)) titleWrap.querySelector('.row-title').appendChild(h(`<span class="check-ok" title="Есть данные">${ICONS.checkCircle}</span>`));
     if(brokenInSection.length) titleWrap.querySelector('.row-title').appendChild(h(`<span class="badge-broken" title="Разорванные связи">${ICONS.linkBroken}</span>`));
     head.appendChild(titleWrap);
+    const chev = h(`<span class="chev ${collapsed?'':'open'}" style="display:inline-flex;color:var(--muted)">${ICONS.chevron}</span>`);
+    head.appendChild(chev);
     const goSec = h(`<button class="iconbtn" title="Открыть раздел">${ICONS.right}</button>`);
-    goSec.onclick=()=>App.navigate('section',{projectId:project.id, sectionId:sec.id});
+    goSec.onclick=(e)=>{ e.stopPropagation(); App.navigate('section',{projectId:project.id, sectionId:sec.id}); };
     head.appendChild(goSec);
+    head.onclick=()=>{ TocUI.toggle(sec.id); App.render(); };
     rows.push(head);
 
-    filteredItems.forEach(it=>{
-      const r = h('<div class="row-item" style="padding-left:28px"></div>');
-      r.appendChild(h(`<div class="row-main">
-        <div class="row-title">${esc(it.name)}
-          ${(it.perVersion?Object.values(it.perVersion).some(Boolean):true)?'<span class="check-ok">'+ICONS.checkCircle+'</span>':''}
-          ${(it.broken&&it.broken.length)?'<span class="badge-broken">'+ICONS.linkBroken+'</span>':''}
-        </div>
-        <div class="row-sub">${esc(it.summary||'')}</div></div>`));
-      const b = h(`<button class="iconbtn">${ICONS.right}</button>`);
-      r.onclick=()=>App.navigate('section',{projectId:project.id, sectionId:sec.id, focusItem:it.id});
-      rows.push(r);
-    });
+    if(!collapsed){
+      filteredItems.forEach(it=>{
+        const r = h('<div class="row-item" style="padding-left:28px"></div>');
+        r.appendChild(h(`<div class="row-main">
+          <div class="row-title">${esc(it.name)}
+            ${(it.perVersion?Object.values(it.perVersion).some(Boolean):true)?'<span class="check-ok">'+ICONS.checkCircle+'</span>':''}
+            ${(it.broken&&it.broken.length)?'<span class="badge-broken">'+ICONS.linkBroken+'</span>':''}
+          </div>
+          <div class="row-sub">${esc(it.summary||'')}</div></div>`));
+        const b = h(`<button class="iconbtn">${ICONS.right}</button>`);
+        r.onclick=()=>App.navigate('section',{projectId:project.id, sectionId:sec.id, focusItem:it.id});
+        rows.push(r);
+      });
+    }
   });
   if(!rows.length) rows.push(h(`<div class="empty-state">${ICONS.search}<div>Ничего не найдено</div></div>`));
   return rows;

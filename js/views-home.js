@@ -157,7 +157,8 @@ function openCreateProject(onCreated){
     if(!nm){ toast('Введите название проекта'); nameInp.focus(); return; }
     const p = Store.addProject(nm, descInp.value.trim());
     closeModal();
-    onCreated && onCreated(p);
+    if(onCreated) onCreated(p);
+    else App.replace('toc',{projectId:p.id}); // по умолчанию — сразу открываем содержание нового проекта
   };
   m.querySelector('[data-x=create]').onclick=create;
   nameInp.addEventListener('keydown',e=>{if(e.key==='Enter')create();});
