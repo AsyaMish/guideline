@@ -101,7 +101,8 @@ function typoItem(project, t, g, version){
   </div>`);
   wrap.appendChild(head);
   const body = h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e2=>{ if(e2.target.closest('.drag-handle'))return; wrap.classList.toggle('open'); body.style.display=wrap.classList.contains('open')?'block':'none'; };
+  restoreItemOpen('ty'+t.id, wrap, body);
+  head.onclick=e2=>{ if(e2.target.closest('.drag-handle'))return; itemToggleHandler('ty'+t.id, wrap, body)(e2); };
 
   // Название
   body.appendChild(textField('Название', t.name, v=>{
@@ -121,7 +122,7 @@ function typoItem(project, t, g, version){
     else { t.shared.fontOverride = null; }
     t.updatedAt=nowISO(); Store.save(); App.render();
   };
-  manualInp.addEventListener('change',()=>{ t.shared.fontOverride=manualInp.value.trim()||null; t.updatedAt=nowISO(); Store.save(); });
+  manualInp.addEventListener('change',()=>{ t.shared.fontOverride=manualInp.value.trim()||null; t.updatedAt=nowISO(); Store.save(); App.render(); });
   sel.onchange=()=>{ t.shared.fontOverride=null; /* выбор из списка тоже override: */ t.shared.fontOverride = sel.value||null; t.updatedAt=nowISO(); Store.save(); App.render(); };
   famF.appendChild(chkManual);
   famF.appendChild(t.shared.fontOverride?manualInp:sel);
@@ -142,17 +143,17 @@ function typoItem(project, t, g, version){
 
   // Межстрочный и межбуквенное (сквозные единицы, значения по версиям)
   const lhF = unitNumField('Межстрочный интервал', versionValue(t,version,o=>o).lineHeight, t.shared.lineHeightUnit,
-    v=>{ setVersionField(t,version,o=>o.lineHeight=v); Store.save(); },
+    v=>{ setVersionField(t,version,o=>o.lineHeight=v); Store.save(); App.render(); },
     u=>{ t.shared.lineHeightUnit=u; t.updatedAt=nowISO(); Store.save(); App.render(); });
   body.appendChild(lhF);
   const lsF = unitNumField('Межбуквенное расстояние', versionValue(t,version,o=>o).letterSpacing, t.shared.letterSpacingUnit,
-    v=>{ setVersionField(t,version,o=>o.letterSpacing=v); Store.save(); },
+    v=>{ setVersionField(t,version,o=>o.letterSpacing=v); Store.save(); App.render(); },
     u=>{ t.shared.letterSpacingUnit=u; t.updatedAt=nowISO(); Store.save(); App.render(); });
   body.appendChild(lsF);
 
   // Поля текущей версии
   if(version==='desktop'){
-    body.appendChild(numField('Кегль (px)', t.perVersion.desktop.size, v=>{ setVersionField(t,'desktop',o=>o.size=v); Store.save(); }));
+    body.appendChild(numField('Кегль (px)', t.perVersion.desktop.size, v=>{ setVersionField(t,'desktop',o=>o.size=v); Store.save(); App.render(); }));
   }else{
     const inherit = !!t.perVersion[version].inherit;
     const block = h('<div class="state-block"></div>');
@@ -163,7 +164,7 @@ function typoItem(project, t, g, version){
       t.updatedAt=nowISO(); Store.save(); App.render();
     };
     if(!inherit){
-      block.appendChild(numField('Кегль (px)', t.perVersion[version].size, v=>{ setVersionField(t,version,o=>o.size=v); Store.save(); }));
+      block.appendChild(numField('Кегль (px)', t.perVersion[version].size, v=>{ setVersionField(t,version,o=>o.size=v); Store.save(); App.render(); }));
     }
     const ff = fillFromParentButton(project, t, version, App.render);
     if(ff){ block.appendChild(h('<div style="margin-top:6px"></div>')); block.lastChild.appendChild(ff); }

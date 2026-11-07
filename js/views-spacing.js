@@ -74,7 +74,8 @@ function spacingItem(project, sp, version){
     <span class="chevron">${ICONS.chevron}</span></div>`);
   wrap.appendChild(head);
   const body=h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;wrap.classList.toggle('open');body.style.display=wrap.classList.contains('open')?'block':'none';};
+  restoreItemOpen('sp'+sp.id, wrap, body);
+  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;itemToggleHandler('sp'+sp.id, wrap, body)(e);};
 
   body.appendChild(textField('Название', sp.name, v=>{
     const nv=v.trim(); if(!nv){App.render();return;}
@@ -92,12 +93,12 @@ function spacingItem(project, sp, version){
       else{ const parent=VERSIONS[VERSIONS.indexOf(version)-1]; sp.perVersion[version]=Object.assign(deepClone(sp.perVersion[parent]||{}),{inherit:false}); }
       Store.save();App.render();
     };
-    if(!inherit) block.appendChild(numField('Значение (px)', pv.value, v=>{setVersionField(sp,version,o=>o.value=v);Store.save();}));
+    if(!inherit) block.appendChild(numField('Значение (px)', pv.value, v=>{setVersionField(sp,version,o=>o.value=v);Store.save();App.render();}));
     const ff=fillFromParentButton(project,sp,version,App.render);
     if(ff) block.appendChild(ff);
     body.appendChild(block);
   }else{
-    body.appendChild(numField('Значение (px)', pv.value, v=>{setVersionField(sp,'desktop',o=>o.value=v);Store.save();}));
+    body.appendChild(numField('Значение (px)', pv.value, v=>{setVersionField(sp,'desktop',o=>o.value=v);Store.save();App.render();}));
   }
 
   body.appendChild(commentField(sp));

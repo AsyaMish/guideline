@@ -202,6 +202,12 @@ textarea.input{min-height:64px;resize:vertical;}
 .layer-block{border:1px solid var(--line);border-radius:var(--radius-m);padding:12px;margin:10px 0;background:var(--surface);}
 .divider{height:1px;background:var(--line);margin:16px 0;}
 .toc-card{overflow:hidden;margin-bottom:16px;}
+/* Сворачиваемые разделы в содержании проекта */
+.toc-head{cursor:pointer;user-select:none;-webkit-user-select:none;}
+.toc-head .toc-count{font-weight:500;}
+.toc-head .toc-chevron{display:inline-flex;flex:none;color:var(--muted);transition:transform .15s;}
+.toc-head .toc-chevron svg{width:18px;height:18px;}
+.toc-head .toc-chevron.open{transform:rotate(90deg);}
 .project-meta{padding:16px;margin-bottom:16px;}
 .hint{font-size:12px;color:var(--muted);margin-top:4px;}
 .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);}

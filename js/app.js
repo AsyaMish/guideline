@@ -1,14 +1,14 @@
 /* Роутер и каркас приложения */
 
 const App = {
-  state: { route:'home', params:{}, filtersOpen:false, spacingTab:'items', stack:[] },
+  state: { route:'home', params:{}, filtersOpen:false, spacingTab:'items', stack:[], tocOpen:{}, itemOpen:{} },
   project: null,
 
   navigate(route, params={}){
     this.state.stack.push({route:this.state.route, params:this.state.params});
     this.state.route=route; this.state.params=params;
-    // Сохраняем текущее местоположение в память
-    localStorage.setItem('app_last_route', JSON.stringify({route: this.state.route, params: this.state.params}));
+    // Сохраняем текущее местоположение, чтобы после перезапуска открыть тот же экран
+    this.persistRoute();
     this.filtersOpenCleanup(route);
     this.render();
     window.scrollTo(0,0);
@@ -17,10 +17,43 @@ const App = {
     const prev=this.state.stack.pop();
     if(prev){ this.state.route=prev.route; this.state.params=prev.params; }
     else this.state.route='home';
+    this.persistRoute();
     this.render();
+  },
+  /* Сохраняем маршрут без временных параметров (фокус/быстрое добавление) */
+  persistRoute(){
+    try{
+      const p={};
+      if(this.state.params.projectId) p.projectId=this.state.params.projectId;
+      if(this.state.params.sectionId) p.sectionId=this.state.params.sectionId;
+      localStorage.setItem('app_last_route', JSON.stringify({route:this.state.route, params:p}));
+    }catch(e){}
+  },
+  /* Восстановить последний экран при запуске приложения */
+  restoreLastRoute(){
+    let saved=null;
+    try{ saved=JSON.parse(localStorage.getItem('app_last_route')||'null'); }catch(e){}
+    if(!saved || typeof saved.route!=='string') return;
+    const r=saved.route, sp=saved.params||{};
+    const proj = sp.projectId ? Store.getProject(sp.projectId) : null;
+    if(r==='toc' || r==='export'){
+      if(proj){ this.state.route=r; this.state.params={projectId:proj.id}; }
+      return;
+    }
+    if(r==='section'){
+      if(proj){
+        const sec=SECTIONS.find(s=>s.id===sp.sectionId);
+        this.state.route='section';
+        this.state.params={projectId:proj.id, sectionId: sec?sec.id:SECTIONS[0].id};
+      }
+      return;
+    }
+    if(r==='settings'){ this.state.route='settings'; this.state.params={}; return; }
+    // home и неизвестные маршруты — открываем главный экран (по умолчанию)
   },
   goBackOr(fallbackRoute){
     if(this.state.stack.length) this.back();
+    else if(fallbackRoute==='toc' && this.project) this.navigate('toc',{projectId:this.project.id}); // после перезапуска «Назад» из раздела ведёт в содержание проекта
     else this.navigate(fallbackRoute||'home');
   },
   filtersOpenCleanup(route){ /* no-op */ },
@@ -302,6 +335,7 @@ function sectionQuickAdd(project,sectionId){
 window.addEventListener('DOMContentLoaded', ()=>{
   Store.load();
   App.applyTheme();
+  App.restoreLastRoute(); // открываем приложение там, где пользователь остановился
   if(window.matchMedia){
     const mq=window.matchMedia('(prefers-color-scheme: dark)');
     const listener=()=>{ if((Store.state.settings.theme||'system')==='system') App.applyTheme(); };

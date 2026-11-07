@@ -64,7 +64,8 @@ function shadowItem(project, sh){
     <span class="chevron">${ICONS.chevron}</span></div>`);
   wrap.appendChild(head);
   const body=h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;wrap.classList.toggle('open');body.style.display=wrap.classList.contains('open')?'block':'none';};
+  restoreItemOpen('sh'+sh.id, wrap, body);
+  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;itemToggleHandler('sh'+sh.id, wrap, body)(e);};
 
   body.appendChild(textField('Название', sh.name, v=>{
     const nv=v.trim(); if(!nv){App.render();return;}
@@ -138,10 +139,10 @@ function shadowLayerBlock(project, sh, l, idx){
   block.appendChild(typeRow);
 
   const g=h('<div class="grid-4"></div>');
-  g.appendChild(numField('X', l.x, v=>{l.x=v;Store.save();}));
-  g.appendChild(numField('Y', l.y, v=>{l.y=v;Store.save();}));
-  g.appendChild(numField('Размытие', l.blur, v=>{l.blur=v;Store.save();}));
-  g.appendChild(numField('Растяжение', l.spread, v=>{l.spread=v;Store.save();}));
+  g.appendChild(numField('X', l.x, v=>{l.x=v;Store.save();App.render();}));
+  g.appendChild(numField('Y', l.y, v=>{l.y=v;Store.save();App.render();}));
+  g.appendChild(numField('Размытие', l.blur, v=>{l.blur=v;Store.save();App.render();}));
+  g.appendChild(numField('Растяжение', l.spread, v=>{l.spread=v;Store.save();App.render();}));
   block.appendChild(g);
 
   const colF=h('<div class="field"><label>Цвет</label></div>');
@@ -150,7 +151,7 @@ function shadowLayerBlock(project, sh, l, idx){
 
   block.appendChild(numField('Прозрачность (%)', l.opacity, v=>{
     if(v!=='' && (+v<0||+v>100)){ toast('0–100%'); return; }
-    l.opacity=v; Store.save();
+    l.opacity=v; Store.save(); App.render();
   }));
   return block;
 }

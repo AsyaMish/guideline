@@ -63,7 +63,8 @@ function radiusItem(project, r, version){
     <span class="chevron">${ICONS.chevron}</span></div>`);
   wrap.appendChild(head);
   const body=h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;wrap.classList.toggle('open');body.style.display=wrap.classList.contains('open')?'block':'none';};
+  restoreItemOpen('r'+r.id, wrap, body);
+  head.onclick=e=>{if(e.target.closest('.drag-handle'))return; itemToggleHandler('r'+r.id, wrap, body)(e);};
 
   body.appendChild(textField('Название', r.name, v=>{
     const nv=v.trim(); if(!nv){App.render();return;}
@@ -133,7 +134,7 @@ function radiusItem(project, r, version){
 
 function radiusFields(r,pv,container){
   if(r.mode==='common'){
-    container.appendChild(numField('Скругление (px)', pv.common, v=>{ setVersionField(r,App.project.activeVersion,o=>o.common=v); Store.save(); }));
+    container.appendChild(numField('Скругление (px)', pv.common, v=>{ setVersionField(r,App.project.activeVersion,o=>o.common=v); Store.save(); App.render(); }));
   }else{
     const g=h('<div class="grid-4"></div>');
     g.appendChild(numField('Верхний левый', pv.tl, v=>setV(r,'tl',v)));
@@ -143,7 +144,7 @@ function radiusFields(r,pv,container){
     container.appendChild(g);
   }
 }
-function setV(r,key,v){ setVersionField(r,App.project.activeVersion,o=>o[key]=v); Store.save(); }
+function setV(r,key,v){ setVersionField(r,App.project.activeVersion,o=>o[key]=v); Store.save(); App.render(); }
 
 function radiusFilterPanel(){
   const fp=h(`<div class="card filters-panel"><h3>Фильтры <button class="iconbtn" data-x="close">${ICONS.close}</button></h3></div>`);

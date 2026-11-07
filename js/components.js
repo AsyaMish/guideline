@@ -82,6 +82,31 @@ function linkSelect(project, kind, value, onChange, opts={}){
   return wrap;
 }
 
+/* ===== Разворачиваемые пункты списка =====
+   Состояние «развёрнут» переживает перерисовку экрана; при сворачивании
+   экран перерисовывается, чтобы сводки и индикаторы обновились сразу. */
+function restoreItemOpen(key, wrap, body){
+  if(App.state.itemOpen && App.state.itemOpen[key]){
+    wrap.classList.add('open');
+    body.style.display='block';
+  }
+}
+function itemToggleHandler(key, wrap, body){
+  return e=>{
+    if(e.target.closest('.drag-handle')) return;
+    if(wrap.classList.contains('open')){
+      if(!App.state.itemOpen) App.state.itemOpen={};
+      App.state.itemOpen[key]=false;
+      App.render(); // перерисовка закрывает пункт и обновляет сводки/индикаторы
+    }else{
+      if(!App.state.itemOpen) App.state.itemOpen={};
+      App.state.itemOpen[key]=true;
+      wrap.classList.add('open');
+      body.style.display='block';
+    }
+  };
+}
+
 /* Числовое поле с px */
 function numField(label, value, onCommit, opts={}){
   const f = h(`<div class="field"><label>${esc(label)}${opts.unit?' ('+opts.unit+')':''}</label><input class="input" inputmode="decimal" placeholder="${opts.placeholder||''}"></div>`);
@@ -110,9 +135,9 @@ function textField(label, value, onCommit, opts={}){
   return f;
 }
 
-/* Поле комментария */
+/* Поле комментария (после правки экран обновляется — сводка элемента показывает комментарий сразу) */
 function commentField(obj, renderFn){
-  return textField('Комментарий', obj.comment||'', v=>{ obj.comment=v; Store.save(); }, {multiline:true, placeholder:'Комментарий к элементу'});
+  return textField('Комментарий', obj.comment||'', v=>{ obj.comment=v; Store.save(); (renderFn||App.render)(); }, {multiline:true, placeholder:'Комментарий к элементу'});
 }
 
 /* Переключатель % ↔ коэффициент */

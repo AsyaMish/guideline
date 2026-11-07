@@ -55,7 +55,8 @@ function buttonCell(project, b, st, version){
     <span class="chevron">${ICONS.chevron}</span></div>`);
   wrap.appendChild(head);
   const body=h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e=>{if(e.target.closest('.drag-handle'))return; wrap.classList.toggle('open'); body.style.display=wrap.classList.contains('open')?'block':'none';};
+  restoreItemOpen('btn'+b.id, wrap, body);
+  head.onclick=e=>{if(e.target.closest('.drag-handle'))return; itemToggleHandler('btn'+b.id, wrap, body)(e);};
 
   // Размер (редактируемый)
   body.appendChild(textField('Размер', b.size, v=>{
@@ -98,10 +99,10 @@ function buttonCell(project, b, st, version){
       Store.save();App.render();
     };
     if(!inherit){
-      block.appendChild(numField('Высота кнопки', pv.height, v=>{setVersionField(b,version,o=>o.height=v);Store.save();}));
+      block.appendChild(numField('Высота кнопки', pv.height, v=>{setVersionField(b,version,o=>o.height=v);Store.save();App.render();}));
       const g=h('<div class="grid-2"></div>');
-      g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(b,version,o=>o.padV=v);Store.save();}));
-      g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(b,version,o=>o.padH=v);Store.save();}));
+      g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(b,version,o=>o.padV=v);Store.save();App.render();}));
+      g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(b,version,o=>o.padH=v);Store.save();App.render();}));
       block.appendChild(g);
       block.appendChild(radiusOverrideField(project,b,version,pv));
       block.appendChild(shadowOverrideField(project,b,version,pv));
@@ -110,10 +111,10 @@ function buttonCell(project, b, st, version){
     if(ff) block.appendChild(ff);
     body.appendChild(block);
   }else{
-    body.appendChild(numField('Высота кнопки', pv.height, v=>{setVersionField(b,'desktop',o=>o.height=v);Store.save();}));
+    body.appendChild(numField('Высота кнопки', pv.height, v=>{setVersionField(b,'desktop',o=>o.height=v);Store.save();App.render();}));
     const g=h('<div class="grid-2"></div>');
-    g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(b,'desktop',o=>o.padV=v);Store.save();}));
-    g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(b,'desktop',o=>o.padH=v);Store.save();}));
+    g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(b,'desktop',o=>o.padV=v);Store.save();App.render();}));
+    g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(b,'desktop',o=>o.padH=v);Store.save();App.render();}));
     body.appendChild(g);
     body.appendChild(radiusOverrideField(project,b,version,pv));
     body.appendChild(shadowOverrideField(project,b,version,pv));
@@ -185,7 +186,7 @@ function stateBlock(project,b,sp,version){
   const brF=h('<div class="field"><label>Обводка: цвет</label></div>');
   brF.appendChild(linkSelect(project,'color',sp.borderColorRef,ref=>{sp.borderColorRef=ref;Store.save();App.render();},{brokenText:'цвет удалён'}));
   block.appendChild(brF);
-  block.appendChild(numField('Толщина обводки (px)', sp.borderWidth, v=>{sp.borderWidth=v;Store.save();}));
+  block.appendChild(numField('Толщина обводки (px)', sp.borderWidth, v=>{sp.borderWidth=v;Store.save();App.render();}));
 
   // Текст: ссылка на стиль + переопределение цвета
   const txF=h('<div class="field"><label>Типографика текста (переопределение)</label></div>');

@@ -50,10 +50,11 @@ function buildColorRows(project){
       <div class="row-sub">${c.hex?esc(c.hex):'<span class="muted">HEX не задан</span>'}${c.comment?' · '+esc(c.comment):''}</div></div>`);
     head.appendChild(title);
     if(c.hex && isFilledHex(c.hex)) head.appendChild(h(`<span class="check-ok">${ICONS.checkCircle}</span>`));
-    head.onclick=e=>{ if(e.target.closest('.drag-handle'))return; wrap.classList.toggle('open'); body.style.display = wrap.classList.contains('open')?'block':'none'; };
+    head.onclick=e=>{ if(e.target.closest('.drag-handle'))return; itemToggleHandler('c'+c.id, wrap, body)(e); };
     wrap.appendChild(head);
 
     const body = h('<div class="item-body" style="display:none"></div>');
+    restoreItemOpen('c'+c.id, wrap, body);
 
     // Название (редактируемое)
     body.appendChild(textField('Название', c.name, v=>{
@@ -73,10 +74,10 @@ function buildColorRows(project){
     updSw();
     hexInp.addEventListener('change',()=>{
       const val = hexInp.value.trim();
-      if(val===''){ c.hex=''; c.updatedAt=nowISO(); Store.save(); updSw(); toast('HEX очищен'); return; }
+      if(val===''){ c.hex=''; c.updatedAt=nowISO(); Store.save(); updSw(); toast('HEX очищен'); App.render(); return; }
       const hx = normHex(val);
       if(!hx){ toast('Неверный формат HEX'); hexInp.value=c.hex; return; }
-      c.hex=hx; c.updatedAt=nowISO(); Store.save(); updSw();
+      c.hex=hx; c.updatedAt=nowISO(); Store.save(); updSw(); App.render();
     });
     body.appendChild(hexF);
 

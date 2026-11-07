@@ -60,6 +60,16 @@ const Store = {
   replaceAllProjects(list){ this.state.projects = list; this.save(); },
 };
 
+/* Если приложение закрыли/свернули сразу после правки — немедленно дозаписываем отложенное сохранение */
+function flushPendingSave(){
+  if(!Store._saveTimer) return;
+  clearTimeout(Store._saveTimer);
+  Store._saveTimer = null;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(Store.state)); }catch(e){}
+}
+window.addEventListener('pagehide', flushPendingSave);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushPendingSave(); });
+
 /* Простейшая миграция недостающих полей */
 function migrateProject(p){
   if(!p.sections) p.sections = makeSectionsData();

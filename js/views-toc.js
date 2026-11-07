@@ -41,10 +41,19 @@ function tocItemMatches(project, item, q){
   return hay.includes(q.toLowerCase());
 }
 
+/* Русская плюрализация: 1 пункт / 2 пункта / 5 пунктов */
+function pluralRu(n, one, few, many){
+  const m10=n%10, m100=n%100;
+  if(m10===1 && m100!==11) return one;
+  if(m10>=2 && m10<=4 && (m100<12 || m100>14)) return few;
+  return many;
+}
+
 function buildTOCRows(project){
   const rows=[];
   const selVers = VERSIONS.filter(v=>TOCFilters.versions[v]);
   const q = TOCFilters.query.trim();
+  const filtersActive = !!(q || TOCFilters.filledOnly || TOCFilters.brokenOnly || selVers.length);
 
   SECTIONS.forEach(sec=>{
     // фильтр по версии раздела
@@ -66,19 +75,30 @@ function buildTOCRows(project){
     const brokenInSection = sectionBrokenLinks(project).filter(b=>b.sectionId===sec.id);
     if(TOCFilters.brokenOnly && !brokenInSection.length && !filteredItems.some(i=>i.broken&&i.broken.length)) return;
 
-    // Заголовок раздела
-    const head = h('<div class="row-item"></div>');
-    head.style.cursor='default'; head.style.background='var(--surface2)';
+    // Разделы по умолчанию свёрнуты; при активном поиске/фильтрах автоматически раскрываем,
+    // чтобы результаты были видны. Если пользователь сам нажал стрелку — его выбор приоритетнее.
+    const open = App.state.tocOpen[sec.id] !== undefined
+      ? App.state.tocOpen[sec.id]
+      : filtersActive;
+
+    // Заголовок раздела: клик — развернуть/свернуть список пунктов
+    const head = h('<div class="row-item toc-head"></div>');
+    head.style.background='var(--surface2)';
+    head.title = open?'Свернуть':'Развернуть';
     const icon = h(`<span style="color:var(--accent);display:inline-flex;width:22px;height:22px">${ICONS[sec.icon]}</span>`);
     head.appendChild(icon);
-    const titleWrap = h(`<div class="row-main"><div class="row-title">${esc(sec.title)}</div></div>`);
+    const titleWrap = h(`<div class="row-main"><div class="row-title">${esc(sec.title)}<span class="muted small toc-count">${items.length} ${pluralRu(items.length,'пункт','пункта','пунктов')}</span></div></div>`);
     if(sectionHasData(project, sec.id, null)) titleWrap.querySelector('.row-title').appendChild(h(`<span class="check-ok" title="Есть данные">${ICONS.checkCircle}</span>`));
     if(brokenInSection.length) titleWrap.querySelector('.row-title').appendChild(h(`<span class="badge-broken" title="Разорванные связи">${ICONS.linkBroken}</span>`));
     head.appendChild(titleWrap);
     const goSec = h(`<button class="iconbtn" title="Открыть раздел">${ICONS.right}</button>`);
-    goSec.onclick=()=>App.navigate('section',{projectId:project.id, sectionId:sec.id});
+    goSec.onclick=e=>{ e.stopPropagation(); App.navigate('section',{projectId:project.id, sectionId:sec.id}); };
     head.appendChild(goSec);
+    head.appendChild(h(`<span class="toc-chevron ${open?'open':''}">${ICONS.chevron}</span>`));
+    head.onclick=e=>{ if(e.target.closest('.iconbtn')) return; App.state.tocOpen[sec.id]=!open; App.render(); };
     rows.push(head);
+
+    if(!open) return;
 
     filteredItems.forEach(it=>{
       const r = h('<div class="row-item" style="padding-left:28px"></div>');

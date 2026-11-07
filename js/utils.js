@@ -1,5 +1,5 @@
 /* Утилиты */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
 function nowISO(){ return new Date().toISOString(); }

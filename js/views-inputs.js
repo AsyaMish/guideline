@@ -59,7 +59,8 @@ function inputFieldCard(project, f, version){
     <span class="chevron">${ICONS.chevron}</span></div>`);
   wrap.appendChild(head);
   const body=h('<div class="item-body" style="display:none"></div>');
-  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;wrap.classList.toggle('open');body.style.display=wrap.classList.contains('open')?'block':'none';};
+  restoreItemOpen('inp'+f.id, wrap, body);
+  head.onclick=e=>{if(e.target.closest('.drag-handle'))return;itemToggleHandler('inp'+f.id, wrap, body)(e);};
 
   body.appendChild(textField('Размер', f.size, v=>{
     const nv=v.trim().toUpperCase(); if(!nv){App.render();return;}
@@ -136,10 +137,10 @@ function inputFieldCard(project, f, version){
 }
 
 function fillGeoFields(project,f,version,pv,container){
-  container.appendChild(numField('Высота поля', pv.height, v=>{setVersionField(f,version,o=>o.height=v);Store.save();}));
+  container.appendChild(numField('Высота поля', pv.height, v=>{setVersionField(f,version,o=>o.height=v);Store.save();App.render();}));
   const g=h('<div class="grid-2"></div>');
-  g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(f,version,o=>o.padV=v);Store.save();}));
-  g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(f,version,o=>o.padH=v);Store.save();}));
+  g.appendChild(numField('Внутр. отступы сверху/снизу', pv.padV, v=>{setVersionField(f,version,o=>o.padV=v);Store.save();App.render();}));
+  g.appendChild(numField('Внутр. отступы слева/справа', pv.padH, v=>{setVersionField(f,version,o=>o.padH=v);Store.save();App.render();}));
   container.appendChild(g);
   const radF=h('<div class="field"><label>Скругление</label></div>');
   radF.appendChild(linkSelect(project,'radius',pv.radiusRef||null,ref=>{setVersionField(f,version,o=>o.radiusRef=ref);Store.save();App.render();},{brokenText:'скругление удалено'}));
@@ -173,7 +174,7 @@ function inputStateBlock(project,f,st){
   block.appendChild(mk('Плейсхолдер — типографика','typo','phTypoRef','Если не выбрано — основная типографика размера.'));
   block.appendChild(mk('Плейсхолдер — цвет','color','phColorRef'));
   block.appendChild(mk('Обводка — цвет','color','borderColorRef'));
-  block.appendChild(numField('Обводка — толщина (px)', st.borderWidth, v=>{st.borderWidth=v;Store.save();}));
+  block.appendChild(numField('Обводка — толщина (px)', st.borderWidth, v=>{st.borderWidth=v;Store.save();App.render();}));
   return block;
 }
 
